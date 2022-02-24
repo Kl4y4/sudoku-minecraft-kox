@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 
 using namespace std;
-
+// test zmiany na git
 int board[9][9] { 0 };
 
 int chunk_centers[9][2] = {
