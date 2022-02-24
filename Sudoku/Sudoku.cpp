@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 
 using namespace std;
-int board[9][9]{ 0 };
+int board[9][9] { 0 };
 
 
 
@@ -19,10 +19,23 @@ void draw_board() {
 
 }
 
+bool check_for_round_end() {
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++)
+            if (board[i][j] == 0) return false;
+    return true;
+}
+
 int main() {
 
+    /*for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++)
+            board[i][j] = 7;*/
+    //draw_board();
 
-    draw_board();
+    cout << check_for_round_end();
+
+
 
 }
 
