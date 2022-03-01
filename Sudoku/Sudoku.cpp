@@ -1,5 +1,5 @@
 ﻿#include <iostream>
-
+#include "kolorki.hpp"
 
 using namespace std;
 
@@ -23,7 +23,7 @@ void draw_board() {
     // dodałem se indexy żeby łatwiej się sprawdzało, można dodać potem czy coś
     // printf("    ");
     // for (int i = 0; i < 9; i++) cout << (i % 3 == 0 && i != 0 ? "   " : " ") << i;
-    // putc('\n',stdout); 
+    // putchar('\n'); 
     //printf("    ");
     //cout << string(9 * 3 - 4,'-') << "\n";
     for (int i = 0; i < 9; i++, cout << "\n") {
