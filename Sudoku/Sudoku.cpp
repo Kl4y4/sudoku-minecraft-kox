@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include "kolorki.hpp"
 #include <random>
 
@@ -26,10 +26,13 @@ const int chunk_centers[9][2] = {
 
 void draw_board() {
     for (int i = 0; i < 9; i++, cout << "\n") {
+        if (i % 3 == 0) cout << "-------------------------\n";
         for (int j = 0; j < 9; j++) {
-            if (j % 3 == 0 || j == 0) cout << "| ";
+            if (j % 3 == 0) cout << "| ";
             cout << board[i][j] << " ";
+            if (j == 8) cout << "| ";
         }
+        if (i == 8) cout << "\n-------------------------\n";
     }
 }
 
@@ -57,6 +60,27 @@ bool is_valid(int x, int y) {
     return (o == 1);
 }
 
+bool check_for_round_end() {
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++)
+            if (board[i][j] == 0) return false;
+    return true;
+}
+
+void get_user_input(int& x, int& y) {
+
+    puts("WYKONAJ RUCH\n");
+    cin >> x >> y;
+    
+    for (int i = 0; i < 10; i++) {
+        if (y == wylosowane[i][0] && x == wylosowane[i][1]) {
+            puts("Wybrane pole jest już zajęte!!!!1!!1!");
+            get_user_input(x, y);
+        }
+    }
+
+}
+
 void shuffle_numbers(int count) {
     int idx = 0;
     while (count) {
@@ -75,8 +99,6 @@ void shuffle_numbers(int count) {
 
 int main() {
     srand(time(0));
-    draw_board();
-    puts("\n--------------------------------------------");
     shuffle_numbers(10);
     draw_board();
 }
