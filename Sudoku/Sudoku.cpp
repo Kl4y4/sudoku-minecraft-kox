@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -37,6 +38,21 @@ bool check_for_round_end() {
     return true;
 }
 
+void get_user_input(int& x, int& y) {
+
+    puts("WYKONAJ RUCH\n");
+    cin >> x >> y;
+    
+    for (int i = 0; i < 10; i++) {
+        if (y == wylosowane[i][0] && x == wylosowane[i][1]) {
+            puts("Wybrane pole jest już zajęte!!!!1!!1!");
+            get_user_input(x, y);
+        }
+    }
+
+}
+
+
 
 bool is_valid(int x, int y) {
     int l = board[y][x];
@@ -61,6 +77,11 @@ bool is_valid(int x, int y) {
 }
 
 int main() {
+
+    int x, y;
+    get_user_input(x, y);
+    printf("X: %i; Y: %i", x, y);
+
     draw_board();
 }
 

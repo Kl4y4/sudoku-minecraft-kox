@@ -1,2 +1,3 @@
 ﻿  Sudoku.cpp
-  Sudoku.vcxproj -> F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Debug\Sudoku.exe
+F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(47,18): error C2065: "wylosowane": niezadeklarowany identyfikator
+F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(47,43): error C2065: "wylosowane": niezadeklarowany identyfikator
