@@ -20,12 +20,23 @@ int chunk_centers[9][2] = {
 
 void draw_board() {
     for (int i = 0; i < 9; i++, cout << "\n") {
+        if (i % 3 == 0) cout << "-------------------------\n";
         for (int j = 0; j < 9; j++) {
-            if (j % 3 == 0 || j == 0) cout << "| ";
+            if (j % 3 == 0) cout << "| ";
             cout << board[i][j] << " ";
+            if (j == 8) cout << "| ";
         }
+        if (i == 8) cout << "\n-------------------------\n";
     }
 }
+
+bool check_for_round_end() {
+    for (int i = 0; i < 9; i++)
+        for (int j = 0; j < 9; j++)
+            if (board[i][j] == 0) return false;
+    return true;
+}
+
 
 bool is_valid(int x, int y) {
     int l = board[y][x];
@@ -52,7 +63,5 @@ bool is_valid(int x, int y) {
 int main() {
     draw_board();
 }
-
-
 
 
