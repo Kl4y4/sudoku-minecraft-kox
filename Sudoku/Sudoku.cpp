@@ -11,8 +11,8 @@ void draw_board() {
     for (int i = 0; i < 6; i++, cout << " |\n") {
         for (int j = 0; j < 7; j++) {
             cout << " | ";
-            if (board[i][j] == 1) writeInStyle(BLUE, to_string(board[i][j]), 0);
-            else if (board[i][j] == 2) writeInStyle(RED, to_string(board[i][j]), 0);
+            if (board[i][j] == 1)      writeInStyle(BLUE, "@", 0);
+            else if (board[i][j] == 2) writeInStyle(RED, "@", 0);
             else cout << board[i][j];            
         }
     }
@@ -21,39 +21,39 @@ void draw_board() {
 
 bool win_move(int x,int y) {
     int n = 0, k = board[y][x];
-    
     // pionowo
     for(int i = y-3; i <= y+3; i++){
         if(i >= 6 || i < 0) continue;
         if(board[i][x] == k) n++;   // jeżeli się powtarza to 1
         else                 n = 0; // jeżeli jakaś inna to wyzerować
+        if(n == 4) return true;
     }
+    
     // poziomo
-    if(n == 4) return true;
     n = 0;
     for(int i = x-3; i <= x+3; i++){
         if(i >= 7 || i < 0) continue;
         if(board[y][i] == k) n++;   // jeżeli się powtarza to 1
         else                 n = 0; // jeżeli jakaś inna to wyzerować
+        if(n == 4) return true;
     }
-    if(n == 4) return true;
     
-    // \ 
-    for(int i = -3 ; i <= 3; i++){
+    n = 0;
+    for(int i = -3; i <= 3; i++){
         if((x+i >= 7 || x+i < 0) || (y+i >= 6 || y+i < 0)) continue;
         if(board[y+i][x+i] == k) n++;
         else                     n = 0;
+        if(n == 4) return true;
     }
-    if(n == 4) return true;
 
-    // /
-    for(int i = 3 ; i >= -3; i--){
-        if((x+i >= 7 || x+i < 0) || (y+i >= 6 || y+i < 0)) continue;
+    n = 0;
+    for(int i = 3; i >= -3; i--){
+        if((x+i >= 7 || x+i < 0) || (y-i >= 6 || y-i < 0)) continue;
         if(board[y-i][x+i] == k) n++;
         else                     n = 0;
+        if(n == 4) return true;
     }
-    if(n == 4) return true;
-
+    
     return false;
 }
 
