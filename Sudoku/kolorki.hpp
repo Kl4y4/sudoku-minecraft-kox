@@ -28,7 +28,8 @@ enum STYLES {
     BLACK = 30, // kolor tekstu
     RED,
     GREEN,
-    BLUE = 34,
+    YELLOW,
+    BLUE,
     VIOLET,
     CYAN,
     B_BLACK = 40, // kolor tła
