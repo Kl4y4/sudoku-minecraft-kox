@@ -2,8 +2,11 @@
 #include "kolorki.hpp"
 #include <random>
 
+#define MAX_NUMBERS 10
+
 using namespace std;
-int board[6][7]{ 0 };
+
+int board[9][9] { 0 };
 
 void draw_board() {
     for (int i = 0; i < 9; i++, cout << "\n") {
@@ -28,7 +31,7 @@ void get_user_input(int& x, int& y) {
 
     puts("WYKONAJ RUCH\n");
     cin >> x >> y;
-
+    
     for (int i = 0; i < 10; i++) {
         if (y == wylosowane[i][0] && x == wylosowane[i][1]) {
             puts("Wybrane pole jest już zajęte!!!!1!!1!");
@@ -37,7 +40,5 @@ void get_user_input(int& x, int& y) {
     }
 
 }
-
 int main() {
-    
 }
