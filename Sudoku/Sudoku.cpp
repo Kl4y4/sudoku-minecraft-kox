@@ -104,4 +104,6 @@ int main() {
         printf("Gracz %i: ",player);
         p_y = get_user_input(p_x,player);
     }
+    printf("WYGRAŁ GRACZ %i\n",player);
+    draw_board();
 }
