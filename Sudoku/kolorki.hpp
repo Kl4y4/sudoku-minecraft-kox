@@ -28,8 +28,7 @@ enum STYLES {
     BLACK = 30, // kolor tekstu
     RED,
     GREEN,
-    YELLOW,
-    BLUE,
+    BLUE = 34,
     VIOLET,
     CYAN,
     B_BLACK = 40, // kolor tła
@@ -52,9 +51,7 @@ void changeStyle(const int style) {
 // Napisze podany tekst w podanym stylu
 void writeInStyle(const int style, const std::string text, const int padding = 0) {
     changeStyle(RESET);
-    for (int i = 0; i < padding; ++i) putc(' ', stdout); // lewa strona
     changeStyle(style);
-    puts(text.c_str());
+    std::cout << text;
     changeStyle(RESET);
-    for (int i = 0; i < padding; ++i) putc(' ', stdout); // prawa strona
 }
