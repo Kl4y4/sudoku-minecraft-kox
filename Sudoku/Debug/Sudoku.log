@@ -1,3 +1,7 @@
 ﻿  Sudoku.cpp
-F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(47,18): error C2065: "wylosowane": niezadeklarowany identyfikator
-F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(47,43): error C2065: "wylosowane": niezadeklarowany identyfikator
+F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(113,20): warning C4305: "inicjowanie": obcięcie z "int" do "char"
+F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(113,14): warning C4309: "inicjowanie": obcięcie stałej wartości
+F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(111,12): warning C4101: "y": lokalna zmienna, do której nie istnieje odwołanie
+F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(111,15): warning C4101: "number": lokalna zmienna, do której nie istnieje odwołanie
+F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Sudoku.cpp(111,9): warning C4101: "x": lokalna zmienna, do której nie istnieje odwołanie
+  Sudoku.vcxproj -> F:\Bartosz Surowiec\sudoku-minecraft-kox\Sudoku\Debug\Sudoku.exe
