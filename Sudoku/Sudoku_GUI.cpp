@@ -1,10 +1,15 @@
 #define OLC_PGE_APPLICATION
 
+#include "olcPixelGameEngine.h"
+#include <algorithm>
+
+/*
 #if defined(__linux__)
-    #include "olcPixelGameEngine.h"
+    
 #else
     #include "olcPixelGameEngine Win.h"
 #endif
+*/
 
 using namespace std;
 
@@ -12,14 +17,20 @@ using namespace std;
 #define H 750
 #define SCALE 1
 #define RESET_SPEED 3
+#define POZIOM_TRUDNOSCI 8
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-// user32 gdi32 opengl32 gdiplus Shlwapi dwmapi stdc++fs
+enum WINDOWS {
+    TITLE_SCREEN,
+    PLAYER_CHOICE,
+    GAME
+};
 
 // =^w^=
 int board[6][7] { 0 };
+int current_window = TITLE_SCREEN;
 
 // https://stackoverflow.com/questions/740308/how-do-i-modify-this-easing-function-to-bounce-less#740350
 // Jak się chce zmienić bounce 
@@ -113,8 +124,7 @@ int eval_board(int const player){
     }
     
     
-    
-    
+
     for(int i = 3; i >= 0; i--){
         int y = 0;
         for(int x = i; x < 7; x++){
@@ -145,8 +155,6 @@ int eval_board(int const player){
     return score;
 }
 
-
-// TODO removing token
 bool insert_token(int x, int player){
     for (int i = 5; i >= 0; i--) {
         if (board[i][x] == 0) {
@@ -156,11 +164,56 @@ bool insert_token(int x, int player){
     }
     return false;
 }
+void remove_token(int x) {
+    for (int i = 5; i >= 0; i--) {
+        if (board[i][x] == 0) board[i+1][x] = 0;
+    }
+}
+
+const int computer_t = 2;
+const int player_t = 1;
+int comp_move = 0;
+
+int minmax(int b[6][7], int depth, int alpha, int beta, bool maximizingPlayer) {
+    int eval = eval_board(computer_t);
+    if (depth == 0 || check_draw() || eval > 100) // Koniec sprawdzanias
+        return eval;
+    if (maximizingPlayer) {
+        int maxEval = -99999;
+        for (int i = 0; i < 7; i++) {
+            if (insert_token(i, computer_t)) {
+                eval = minmax(b, depth - 1, alpha, beta, false);
+                remove_token(i);
+                if (eval > maxEval) {
+                    maxEval = eval;
+                    comp_move = i;
+                }
+                alpha = MAX(alpha, eval);
+                if (beta <= alpha) break;
+            }
+        }
+        return maxEval;
+    }
+    else {
+        int minEval = 99999;
+        for (int i = 0; i < 7; i++) {
+            if (insert_token(i, player_t)) {
+                eval = minmax(b, depth - 1, alpha, beta, true);
+                remove_token(i);
+                minEval = MIN(minEval, eval);
+                beta = MIN(beta, eval);
+                if (beta <= alpha) break;
+            }
+        }
+        return minEval;
+    }
+}
 
 // -------------------------------------------------
 
 bool win_move(int x,int y) {
     int n = 0, k = board[y][x];
+    //TODO skreślanie
     // pionowo
     for(int i = y-3; i <= y+3; i++){
         if(i >= 6 || i < 0) continue;
@@ -197,8 +250,6 @@ bool win_move(int x,int y) {
     return false;
 }
 
-
-
 bool animate_token(float time, float start_pos, float end_pos, float durration, float& token_pos){
     if(time > durration) return true;
     token_pos = (EaseBounceOut(time,durration) * end_pos) + start_pos;
@@ -217,7 +268,7 @@ public:
 	bool can_insert = true;
 	bool animating = false;
 	bool reset = false;
-	
+    
 	int game_over = 0;
 	
 	float curr_time = 0;
@@ -292,7 +343,6 @@ public:
 		
         back_layer = CreateLayer();
 		EnableLayer(back_layer,true);
-        
 		return true;
 	}
 
@@ -335,8 +385,17 @@ public:
 		Clear(olc::BLANK);
 		
 		if(!game_over){ // Póki nikt nie wygrał to bierzemy kolumne i wstawiamy token jak się zgadza
+            if (player == 2 && !animating) {
+                can_insert = false;
+                animating = true;
+                minmax(board, POZIOM_TRUDNOSCI, -9999, 9999, true);
+                p_x = comp_move;
+                check_token(p_x);
+                goto skip_input;
+            }
             if(can_insert) p_x = get_user_input(p_y,player);
             
+        skip_input:
             char player_string[8];
             sprintf(player_string,"Gracz %i",player);
             DrawString(W/2 - 220,H/2 - 320, string(player_string), player == 1 ? olc::RED : olc::YELLOW,7);
