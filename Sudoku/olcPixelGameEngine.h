@@ -914,6 +914,8 @@ namespace olc
 		bool IsFocused() const;
 		// Get the state of a specific keyboard button
 		HWButton GetKey(Key k) const;
+
+		bool AnyInput() const;
 		// Get the state of a specific mouse button
 		HWButton GetMouse(uint32_t b) const;
 		// Get Mouse X coordinate in "pixel" space
@@ -1784,6 +1786,12 @@ namespace olc
 
 	void PixelGameEngine::SetLayerOffset(uint8_t layer, const olc::vf2d& offset)
 	{ SetLayerOffset(layer, offset.x, offset.y); }
+
+	bool PixelGameEngine::AnyInput() const
+	{
+		for (int i = 0; i < 256; ++i) if (pKeyboardState[i].bPressed || pKeyboardState[i].bHeld) return true;
+		return false;
+	}
 
 	void PixelGameEngine::SetLayerOffset(uint8_t layer, float x, float y)
 	{ if (layer < vLayers.size()) vLayers[layer].vOffset = { x, y }; }

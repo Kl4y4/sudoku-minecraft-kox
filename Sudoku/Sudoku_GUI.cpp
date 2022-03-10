@@ -265,15 +265,23 @@ public:
     uint32_t back_layer;
 	
 	bool front_layer_lock = true;
-	bool can_insert = true;
-	bool animating = false;
-	bool reset = false;
+	bool can_insert       = true;
+	bool animating        = false;
+	bool reset            = false;
     
 	int game_over = 0;
 	
 	float curr_time = 0;
 	float token_falling;
-	
+
+    olc::Sprite* title_data = nullptr;
+    olc::Decal* title = nullptr;
+
+    olc::Sprite* pc_clipart_data = nullptr;
+    olc::Decal* pc_clipart = nullptr;
+
+    olc::Sprite* pady_clipart_data = nullptr;
+    olc::Decal* pady_clipart = nullptr;
 	Game()
 	{
 		player = 1;
@@ -317,8 +325,8 @@ public:
         for(int j = 0; j < 6; j++){
             for(int i = 0;i < 7;i++)
             {
-                if(board[j][i] == 2)      {FillCircle(i * 92 + 205,j * 92 + 225,r+7, olc::BLACK);FillCircle(i * 92 + 205,j * 92 + 225,r, olc::YELLOW);}
-                else if(board[j][i] == 1) {FillCircle(i * 92 + 205,j * 92 + 225,r+7, olc::BLACK);FillCircle(i * 92 + 205,j * 92 + 225,r, olc::RED);}
+                if(board[j][i] == 2)      {FillCircle(i * 92 + 205,j * 92 + 225,r+7, olc::DARK_YELLOW);FillCircle(i * 92 + 205,j * 92 + 225,r, olc::YELLOW);}
+                else if(board[j][i] == 1) {FillCircle(i * 92 + 205,j * 92 + 225,r+7, olc::DARK_RED);FillCircle(i * 92 + 205,j * 92 + 225,r, olc::RED);}
                 else                          continue;
             }
         }
@@ -335,9 +343,20 @@ public:
                 board[i][j] = 0;
                 
         player = rand() % 2 + 1;
+        //current_window = PLAYER_CHOICE;
     }
+
 public:
 	bool OnUserCreate() override {
+        title_data = new olc::Sprite("Title.png");
+        title = new olc::Decal(title_data);
+
+        pc_clipart_data = new olc::Sprite("computer.png");
+        pc_clipart  = new olc::Decal(pc_clipart_data);
+        // TODO Odwrócić sprite z padami
+        pady_clipart_data = new olc::Sprite("pady.png");
+        pady_clipart = new olc::Decal(pady_clipart_data);
+
 		front_layer = CreateLayer();
 		EnableLayer(front_layer,true);
 		
@@ -347,91 +366,108 @@ public:
 	}
 
 	bool OnUserUpdate(float delta) override {
-        // Instant Win
-        if(GetKey(olc::TAB).bReleased) game_over = 1;
-        
-        if(front_layer_lock){
-            SetDrawTarget(front_layer);
-            Clear(olc::BLANK);
-            draw_board();
-            front_layer_lock = false;
-        }      
-        
-        SetDrawTarget(back_layer);
-        Clear(olc::DARK_CYAN);
-        draw_tokens();
-        if(animating){ // trwa animacja spadania tokenu
-            if(animate_token(curr_time,130,p_y * 92 + 95, p_y > 1 ? 2.0 : 1.2, token_falling)){ // Jeżeli skończył animacje to wstawić token i nie animować
-                board[p_y][p_x] = player;
-                animating = false;
-                curr_time = 0;
-                
-                game_over = win_move(p_x,p_y) + check_draw();
-                if(game_over) goto skip_game_over;
-                
-                can_insert = true;
-                if(player == 1) player = 2;
-                else            player = 1;
-            }
-            else{
-                FillCircle(p_x * 92 + 205,token_falling,40, olc::BLACK);
-                FillCircle(p_x * 92 + 205,token_falling,33, player == 1 ? olc::RED : olc::YELLOW);
-                curr_time += delta;
-            }
-		}
-		
-		skip_game_over:
-        SetDrawTarget(nullptr);
-		Clear(olc::BLANK);
-		
-		if(!game_over){ // Póki nikt nie wygrał to bierzemy kolumne i wstawiamy token jak się zgadza
-            if (player == 2 && !animating) {
-                can_insert = false;
-                animating = true;
-                minmax(board, POZIOM_TRUDNOSCI, -9999, 9999, true);
-                p_x = comp_move;
-                check_token(p_x);
-                goto skip_input;
-            }
-            if(can_insert) p_x = get_user_input(p_y,player);
+        switch (current_window) {
+        case TITLE_SCREEN:
+            Clear(olc::BLACK);
+            DrawDecal(olc::vi2d(0,0),title);
+            if (AnyInput()) current_window = PLAYER_CHOICE;
+            break;
+        case PLAYER_CHOICE:
+            Clear(olc::BLACK);
+            DrawString(250, 70, "Wybor trybu gry",olc::WHITE,4);
             
-        skip_input:
-            char player_string[8];
-            sprintf(player_string,"Gracz %i",player);
-            DrawString(W/2 - 220,H/2 - 320, string(player_string), player == 1 ? olc::RED : olc::YELLOW,7);
-            
-            if(p_x != -1 && can_insert){ // Insert the token and change Player because he choosed the column
-                if(check_token(p_x)){
-                    animating = true;
-                    can_insert = false;
+            DrawDecal(olc::vi2d(150, 320), pady_clipart);
+            DrawDecal(olc::vi2d(580, 320), pc_clipart,olc::vf2d(0.6,0.6));
+
+            break;
+
+        case GAME:
+            // Instant Win
+            if(GetKey(olc::TAB).bReleased) game_over = 1;
+        
+            if(front_layer_lock){
+                SetDrawTarget(front_layer);
+                Clear(olc::BLANK);
+                draw_board();
+                front_layer_lock = false;
+            }      
+        
+            SetDrawTarget(back_layer);
+            Clear(olc::BLACK);
+            draw_tokens();
+            if(animating){ // trwa animacja spadania tokenu
+                if(animate_token(curr_time,130,p_y * 92 + 95, p_y > 1 ? 1.4 : 1.2, token_falling)){ // Jeżeli skończył animacje to wstawić token i nie animować
+                    board[p_y][p_x] = player;
+                    animating = false;
+                    curr_time = 0;
+                
+                    game_over = win_move(p_x,p_y) + check_draw();
+                    if(game_over) goto skip_game_over;
+                
+                    can_insert = true;
+                    if(player == 1) player = 2;
+                    else            player = 1;
                 }
-            }
-		}
-		else{ // Po wygranej, piszemy kto wygrał
-            char game_over_title[20];
-            if(game_over == 1)
-                sprintf(game_over_title,"Wygrana!!\nGracz %i",player);
-            else
-                sprintf(game_over_title,"Remis ://");
-            DrawString(W/2 - 220,H/2 - 320, string(game_over_title), player == 1 ? olc::RED : olc::YELLOW,7);
+                else{
+                    FillCircle(p_x * 92 + 205,token_falling,40, player == 1 ? olc::DARK_RED : olc::DARK_YELLOW);
+                    FillCircle(p_x * 92 + 205,token_falling,33, player == 1 ? olc::RED : olc::YELLOW);
+                    curr_time += delta;
+                }
+		    }
+		
+		    skip_game_over:
+            SetDrawTarget(nullptr);
+		    Clear(olc::BLANK);
+		
+		    if(!game_over){ // Póki nikt nie wygrał to bierzemy kolumne i wstawiamy token jak się zgadza
+                if (player == 2 && !animating && false) {
+                    can_insert = false;
+                    animating = true;
+                    minmax(board, POZIOM_TRUDNOSCI, -9999, 9999, true);
+                    p_x = comp_move;
+                    check_token(p_x);
+                    goto skip_input;
+                }
+                if(can_insert) p_x = get_user_input(p_y,player);
             
-            olc::vi2d text_collide = GetTextSize("RESET")*4;
-            olc::Pixel text_col = olc::WHITE; 
+            skip_input:
+                char player_string[8];
+                sprintf(player_string,"Gracz %i",player);
+                DrawString(W/2 - 220,H/2 - 320, string(player_string), player == 1 ? olc::RED : olc::YELLOW,7);
             
-            olc::vi2d mouse = GetMousePos();
-            if(mouse.x > 810 && mouse.x < 810 + text_collide.x + 30){
-                if(mouse.y > sin(curr_time * RESET_SPEED) * 30 + 490 && mouse.y < sin(curr_time * RESET_SPEED) * 30 + 490 + text_collide.y+20){
-                    text_col = olc::GREY;
-                    if(GetMouse(0).bHeld){
-                        text_col = olc::DARK_RED;
-                        Reset();
+                if(p_x != -1 && can_insert){ // Insert the token and change Player because he choosed the column
+                    if(check_token(p_x)){
+                        animating = true;
+                        can_insert = false;
                     }
                 }
-            }
+		    }
+		    else{ // Po wygranej, piszemy kto wygrał
+                char game_over_title[20];
+                if(game_over == 1)
+                    sprintf(game_over_title,"Wygrana!!\nGracz %i",player);
+                else
+                    sprintf(game_over_title,"Remis ://");
+                DrawString(W/2 - 220,H/2 - 320, string(game_over_title), player == 1 ? olc::RED : olc::YELLOW,7);
             
-            DrawString(820,sin(curr_time * RESET_SPEED) * 30 + 500,"RESET",text_col,4);
-            curr_time += delta;
-		}
+                olc::vi2d text_collide = GetTextSize("RESET")*4;
+                olc::Pixel text_col = olc::WHITE; 
+            
+                olc::vi2d mouse = GetMousePos();
+                if(mouse.x > 810 && mouse.x < 810 + text_collide.x + 30){
+                    if(mouse.y > sin(curr_time * RESET_SPEED) * 30 + 490 && mouse.y < sin(curr_time * RESET_SPEED) * 30 + 490 + text_collide.y+20){
+                        text_col = olc::GREY;
+                        if(GetMouse(0).bHeld){
+                            text_col = olc::DARK_RED;
+                            Reset();
+                        }
+                    }
+                }
+            
+                DrawString(820,sin(curr_time * RESET_SPEED) * 30 + 500,"RESET",text_col,4);
+                curr_time += delta;
+		    }
+        }
 		return true;
 	}
 };
@@ -441,6 +477,9 @@ int main()
 	Game game;
 	if (game.Construct(W, H, SCALE, SCALE))
 		game.Start();
+
+    delete game.title_data;
+    delete game.title;
 	return 0;
 }
 
