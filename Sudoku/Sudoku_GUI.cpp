@@ -1,15 +1,10 @@
 #define OLC_PGE_APPLICATION
 
-#include "olcPixelGameEngine.h"
+//#include "olcPixelGameEngine.h"
+#include "olcPixelGameEngine Win.h"
 #include <algorithm>
+#include <limits.h>
 
-/*
-#if defined(__linux__)
-    
-#else
-    #include "olcPixelGameEngine Win.h"
-#endif
-*/
 
 using namespace std;
 
@@ -31,7 +26,7 @@ enum WINDOWS {
 // =^w^=
 int board[6][7] { 0 };
 int current_window = TITLE_SCREEN;
-
+int comp_move = -1;
 // https://stackoverflow.com/questions/740308/how-do-i-modify-this-easing-function-to-bounce-less#740350
 // Jak się chce zmienić bounce 
 float EaseBounceOut(float t, float d){
@@ -51,108 +46,97 @@ float EaseBounceOut(float t, float d){
     return 7.5625 * t * t + 0.984375f;    
 }
 
+float lerp(float start, float end, float pct){
+    return (start + (end - start) * pct);
+}
+
 bool check_draw() {
     for(int i = 0; i < 7; i++)
         if(board[0][i] == 0) return false; 
     return true;
 } 
 
-// -------------------------------------- AI sprawy --------------------------------------
 
-
-// Jakiś sposób żeby pokazać że wygrana
-int eval_board(int const player){
-    int eval_scores[5] = {
-        0, 
-        0,
-        1,  // powtarza sie 2 razy
-        5,  // powtarza sie 3 razy
-        170 // powtarza sie 4 razy
-    };
+bool win_move(const int p) {
+    int n = 0;
     
-    int n1 = 0,n2 = 0, k = player, score = 0;
-
-    for(int i = 0; i < 6; i++){
+    for(int i = 0; i < 6; i++){ // Poziomo
         for(int j = 0; j < 7;j++ ){
-            if(board[i][j] == k)      { n1++; score -= eval_scores[n2]; n2 = 0;}
-            else if(board[i][j] != 0) { n2++; score += eval_scores[n1]; n1 = 0;}
-            else                      { score += eval_scores[n1] - eval_scores[n2] ;n1 = 0; n2 = 0;}
-        }
-        if(!n1 || !n2) score += eval_scores[n1] - eval_scores[n2];     
-        n1 = 0;
-        n2 = 0;
+            if(board[i][j] == p)      { n++;if(n == 4) return true;}
+            else n = 0;
+        }   
+        n = 0;
     }
     
-    for(int i = 0; i < 7; i++){
+    for(int i = 0; i < 7; i++){ // Pionowo
         for(int j = 0; j < 6;j++ ){
-            if(board[j][i] == k)      { n1++; score -= eval_scores[n2]; n2 = 0;}
-            else if(board[j][i] != 0) { n2++; score += eval_scores[n1]; n1 = 0;}
-            else                      { score += eval_scores[n1] - eval_scores[n2] ;n1 = 0; n2 = 0;}
+            if(board[j][i] == p)      { n++;if(n == 4) return true;}
+            else n = 0;
         }
-        if(!n1 || !n2) score += eval_scores[n1] - eval_scores[n2];   
-        n1 = 0;
-        n2 = 0;
+        n = 0;
     }
     
     
-    
+     // ---------------- DIAGONALS ------------------
     for(int i = 3; i < 7; i++){
         int y = 0;
         for(int x = i; x >= 0; x--){
-            if(board[y][x] == k)      { n1++; score -= eval_scores[n2]; n2 = 0;}
-            else if(board[y][x] != 0) { n2++; score += eval_scores[n1]; n1 = 0;}
-            else                      { score += eval_scores[n1] - eval_scores[n2] ;n1 = 0; n2 = 0;}
+            if(board[y][x] == p)      { n++; if(n == 4) return true;}
+            else n = 0;
             y++;
             if(y == 6) break;            
         }
-        if(!n1 || !n2) score += eval_scores[n1] - eval_scores[n2];  
-        n1 = 0;
-        n2 = 0;
+        n = 0;
     }
     for(int i = 1; i < 3; i++){
         int y = i;
         for(int x = 6; x >= 0; x--){
-            if(board[y][x] == k)      { n1++; score -= eval_scores[n2]; n2 = 0;}
-            else if(board[y][x] != 0) { n2++; score += eval_scores[n1]; n1 = 0;}
-            else                      { score += eval_scores[n1] - eval_scores[n2] ;n1 = 0; n2 = 0;}
+            if(board[y][x] == p)      { n++; if(n == 4) return true;}
+            else n = 0;
             y++;
-            if(y == 6) break; 
+            if(y == 6) break;  
         }
-        if(!n1 || !n2) score += eval_scores[n1] - eval_scores[n2];
-        n1 = 0;
-        n2 = 0;
+        n = 0;
     }
+    // =========================================================
     
-    
-
+    // -------------------- To też ----------------------
     for(int i = 3; i >= 0; i--){
         int y = 0;
         for(int x = i; x < 7; x++){
-            if(board[y][x] == k)      { n1++; score -= eval_scores[n2]; n2 = 0;}
-            else if(board[y][x] != 0) { n2++; score += eval_scores[n1]; n1 = 0;}
-            else                      { score += eval_scores[n1] - eval_scores[n2] ;n1 = 0; n2 = 0;}
+            if(board[y][x] == p)      { n++; if(n == 4) return true;}
+            else n = 0;
             y++;
-            if(y == 6) break; 
+            if(y == 6) break;  
         }
-        if(!n1 || !n2) score += eval_scores[n1] - eval_scores[n2];
-        n1 = 0;
-        n2 = 0;
+        n = 0;
     }    
     for(int i = 1; i < 3; i++){
         int y = i;
         for(int x = 0; x < 7; x++){
-            if(board[y][x] == k)      { n1++; score -= eval_scores[n2]; n2 = 0;}
-            else if(board[y][x] != 0) { n2++; score += eval_scores[n1]; n1 = 0;}
-            else                      { score += eval_scores[n1] - eval_scores[n2] ;n1 = 0; n2 = 0;}
+            if(board[y][x] == p)      { n++; if(n == 4) return true;}
+            else n = 0;
             y++;
-            if(y == 6) break; 
+            if(y == 6) break;  
         }
-        if(!n1 || !n2) score += eval_scores[n1] - eval_scores[n2];
-        n1 = 0;
-        n2 = 0;
+        n = 0;
     }
+    // ==========================================================
     
-    return score;
+    return false;
+}
+
+// -------------------------------------- AI sprawy --------------------------------------
+
+int heurFunction(unsigned int g, unsigned int b, unsigned int z) {
+	int score = 0;
+	if (g == 4) { score += 500001; } // preference to go for winning move vs. block
+	else if (g == 3 && z == 1) { score += 5000; }
+	else if (g == 2 && z == 2) { score += 500; }
+	else if (b == 2 && z == 2) { score -= 501; }  // preference to block
+	else if (b == 3 && z == 1) { score -= 5001; } // preference to block
+	else if (b == 4) { score -= 500000; }
+	return score;
 }
 
 bool insert_token(int x, int player){
@@ -165,90 +149,133 @@ bool insert_token(int x, int player){
     return false;
 }
 void remove_token(int x) {
-    for (int i = 5; i >= 0; i--) {
-        if (board[i][x] == 0) board[i+1][x] = 0;
+    for (int i = 0; i < 6; i++) {
+        if (board[i][x] != 0){ board[i][x] = 0; return;}
     }
 }
 
-const int computer_t = 2;
-const int player_t = 1;
-int comp_move = 0;
+int scoreSet(int v[], unsigned int p) {
+	
+	unsigned int good = 0;    // points in favor of p
+	unsigned int bad = 0;    // points against p
+	unsigned int empty = 0; // neutral spots
+	
+	for (int i = 0; i < 4; i++) { // just enumerate how many of each
+		good  += (v[i] == p) ? 1 : 0;
+		bad   += (v[i] == 1 || v[i] == 2) ? 1 : 0;
+		empty += (v[i] == 0) ? 1 : 0;
+	}
 
-int minmax(int b[6][7], int depth, int alpha, int beta, bool maximizingPlayer) {
-    int eval = eval_board(computer_t);
-    if (depth == 0 || check_draw() || eval > 100) // Koniec sprawdzanias
-        return eval;
-    if (maximizingPlayer) {
-        int maxEval = -99999;
-        for (int i = 0; i < 7; i++) {
-            if (insert_token(i, computer_t)) {
-                eval = minmax(b, depth - 1, alpha, beta, false);
-                remove_token(i);
-                if (eval > maxEval) {
-                    maxEval = eval;
-                    comp_move = i;
-                }
-                alpha = MAX(alpha, eval);
-                if (beta <= alpha) break;
-            }
-        }
-        return maxEval;
-    }
-    else {
-        int minEval = 99999;
-        for (int i = 0; i < 7; i++) {
-            if (insert_token(i, player_t)) {
-                eval = minmax(b, depth - 1, alpha, beta, true);
-                remove_token(i);
-                minEval = MIN(minEval, eval);
-                beta = MIN(beta, eval);
-                if (beta <= alpha) break;
-            }
-        }
-        return minEval;
-    }
+	bad -= good;
+	return heurFunction(good, bad, empty);
+}
+
+int tabScore(int b[6][7], const int p) {
+	int score = 0;
+	
+	int rs[7] = {0};
+	int cs[6] = {0};
+	int set[4] = {0};
+	
+	for (unsigned int r = 0; r < 6; r++) {
+		for (unsigned int c = 0; c < 7; c++) {
+			rs[c] = b[r][c]; // this is a distinct row alone
+		}
+		for (unsigned int c = 0; c < 7 - 3; c++) {
+			for (int i = 0; i < 4; i++) {
+				set[i] = rs[c + i]; // for each possible "set" of 4 spots from that row
+			}
+			score += scoreSet(set, p); // find score
+		}
+	}
+	// vertical
+	for (unsigned int c = 0; c < 7; c++) {
+		for (unsigned int r = 0; r < 6; r++) {
+			cs[r] = b[r][c];
+		}
+		for (unsigned int r = 0; r < 6 - 3; r++) {
+			for (int i = 0; i < 4; i++) {
+				set[i] = cs[r + i];
+			}
+			score += scoreSet(set, p);
+		}
+	}
+	// diagonals
+	for (unsigned int r = 0; r < 6 - 3; r++) {
+		for (unsigned int c = 0; c < 7; c++) {
+			rs[c] = b[r][c];
+		}
+		for (unsigned int c = 0; c < 7 - 3; c++) {
+			for (int i = 0; i < 4; i++) {
+				set[i] = b[r + i][c + i];
+			}
+			score += scoreSet(set, p);
+		}
+	}
+	for (unsigned int r = 0; r < 6 - 3; r++) {
+		for (unsigned int c = 0; c < 7; c++) {
+			rs[c] = b[r][c];
+		}
+		for (unsigned int c = 0; c < 7 - 3; c++) {
+			for (int i = 0; i < 4; i++) {
+				set[i] = b[r + 3 - i][c + i];
+			}
+			score += scoreSet(set, p);
+		}
+	}
+	return score;
+}
+
+int minmax(int b[6][7], int depth , int alpha , int beta , bool computer){
+    if (depth == 0 || check_draw()) {
+		// get current score to return
+		return tabScore(b, 2);
+	}
+	
+	if (computer) { // if AI player
+		int maxVal = INT_MIN;
+		if (win_move(1))   // if player about to win
+			return maxVal; // force it to say it's worst possible score, so it knows to avoid move
+
+		for (int i = 0; i < 7; i++) { // for each possible move
+			if (b[0][i] == 0) { // but only if that column is non-full
+                insert_token(i,2);
+				int score = minmax(b, depth - 1, alpha, beta, false); // find move based on that new board state
+				remove_token(i);
+				if (score > maxVal) { // if better score, replace it, and consider that best move (for now)
+					maxVal = score;
+					if(depth == POZIOM_TRUDNOSCI) comp_move = i;
+				}
+				alpha = MAX(alpha, maxVal);
+				if (alpha >= beta) break;// for pruning
+			}
+		}
+		return maxVal; // return best possible move
+	}
+	else {
+		int minVal = INT_MAX; // since PLAYER is minimized, we want moves that diminish this score
+		if (win_move(2)) {
+			return minVal; // if about to win, report that move as best
+		}
+		for (int i = 0; i < 7; i++) {
+			if (b[0][i] == 0) {
+				insert_token(i,1);
+				int score = minmax(b, depth - 1, alpha, beta, true);
+				if (score < minVal) {
+					minVal = score;
+					//comp_move = i;
+				}
+				remove_token(i);
+				beta = MIN(beta, minVal);
+				if (alpha >= beta) break;
+			}
+		}
+		return minVal;
+	}	
 }
 
 // -------------------------------------------------
 
-bool win_move(int x,int y) {
-    int n = 0, k = board[y][x];
-    //TODO skreślanie
-    // pionowo
-    for(int i = y-3; i <= y+3; i++){
-        if(i >= 6 || i < 0) continue;
-        if(board[i][x] == k) n++;   // jeżeli się powtarza to 1
-        else                 n = 0; // jeżeli jakaś inna to wyzerować
-        if(n == 4) return true;
-    }
-    
-    // poziomo
-    n = 0;
-    for(int i = x-3; i <= x+3; i++){
-        if(i >= 7 || i < 0) continue;
-        if(board[y][i] == k) n++;   // jeżeli się powtarza to 1
-        else                 n = 0; // jeżeli jakaś inna to wyzerować
-        if(n == 4) return true;
-    }
-    
-    n = 0;
-    for(int i = -3; i <= 3; i++){
-        if((x+i >= 7 || x+i < 0) || (y+i >= 6 || y+i < 0)) continue;
-        if(board[y+i][x+i] == k) n++;
-        else                     n = 0;
-        if(n == 4) return true;
-    }
-
-    n = 0;
-    for(int i = 3; i >= -3; i--){
-        if((x+i >= 7 || x+i < 0) || (y-i >= 6 || y-i < 0)) continue;
-        if(board[y-i][x+i] == k) n++;
-        else                     n = 0;
-        if(n == 4) return true;
-    }
-    
-    return false;
-}
 
 bool animate_token(float time, float start_pos, float end_pos, float durration, float& token_pos){
     if(time > durration) return true;
@@ -259,21 +286,22 @@ bool animate_token(float time, float start_pos, float end_pos, float durration, 
 class Game : public olc::PixelGameEngine
 {
 public:
-    int p_x,p_y,player;
-    
     uint32_t front_layer;
     uint32_t back_layer;
 	
 	bool front_layer_lock = true;
 	bool can_insert       = true;
 	bool animating        = false;
-	bool reset            = false;
+    bool game_w_computer   = false;
     
 	int game_over = 0;
+    int p_x,p_y,player;
+	int score = 0;
 	
 	float curr_time = 0;
 	float token_falling;
-
+    float selection_x = 0;
+    
     olc::Sprite* title_data = nullptr;
     olc::Decal* title = nullptr;
 
@@ -282,6 +310,7 @@ public:
 
     olc::Sprite* pady_clipart_data = nullptr;
     olc::Decal* pady_clipart = nullptr;
+    
 	Game()
 	{
 		player = 1;
@@ -301,11 +330,13 @@ public:
         return true;
     }
     
-    int get_user_input(int& y,int player) {
+    int get_user_input() {
         int mouse_x = GetMouseX();
         if(mouse_x < 160 || mouse_x > 800) return -1;
         
-		FillRect(((mouse_x-160) / 92) * 92 + 160,80,92,670, olc::Pixel(255, 255, 255,80));
+        selection_x = lerp(selection_x, ((mouse_x-160) / 92) * 92 + 160, 0.13);
+		FillRect(selection_x,165,92,610, olc::Pixel(255, 255, 255,80));
+        
         if(GetMouse(0).bPressed) return ((mouse_x-160) / 92);
         else return -1;
     }
@@ -337,13 +368,13 @@ public:
         curr_time = 0;
         can_insert = true;
         animating = false;
-        reset = false;
+        front_layer_lock = true;
         for(int i = 0; i < 6; i++)
             for(int j = 0; j < 7; j++)
                 board[i][j] = 0;
                 
-        player = rand() % 2 + 1;
-        //current_window = PLAYER_CHOICE;
+        player = player == 1 ? 2 : 1;
+        current_window = PLAYER_CHOICE;
     }
 
 public:
@@ -353,7 +384,7 @@ public:
 
         pc_clipart_data = new olc::Sprite("computer.png");
         pc_clipart  = new olc::Decal(pc_clipart_data);
-        // TODO Odwrócić sprite z padami
+        
         pady_clipart_data = new olc::Sprite("pady.png");
         pady_clipart = new olc::Decal(pady_clipart_data);
 
@@ -366,19 +397,38 @@ public:
 	}
 
 	bool OnUserUpdate(float delta) override {
+        int mouse_x = GetMouseX();
         switch (current_window) {
+        
         case TITLE_SCREEN:
             Clear(olc::BLACK);
             DrawDecal(olc::vi2d(0,0),title);
-            if (AnyInput()) current_window = PLAYER_CHOICE;
+            if (AnyInput() || GetMouse(0).bPressed) current_window = PLAYER_CHOICE;
             break;
+            
         case PLAYER_CHOICE:
             Clear(olc::BLACK);
+            
             DrawString(250, 70, "Wybor trybu gry",olc::WHITE,4);
             
+
+                                    
             DrawDecal(olc::vi2d(150, 320), pady_clipart);
             DrawDecal(olc::vi2d(580, 320), pc_clipart,olc::vf2d(0.6,0.6));
-
+            
+            
+            if(mouse_x < 50 || mouse_x > 950) break;
+            selection_x = lerp(selection_x, ((mouse_x-50) / 450) * 450 + 50, 0.07);
+            FillRect(selection_x,200,450,500, olc::Pixel(120, 120, 120));
+            
+            DrawString(120,640,"Gracz vs Gracz",olc::WHITE,3);
+            DrawString(600,640,"Gracz vs AI",olc::WHITE,3);
+            
+            if(GetMouse(0).bPressed){
+                game_w_computer = ((mouse_x-50) / 450);
+                current_window = GAME;
+            }
+            
             break;
 
         case GAME:
@@ -401,7 +451,7 @@ public:
                     animating = false;
                     curr_time = 0;
                 
-                    game_over = win_move(p_x,p_y) + check_draw();
+                    game_over = win_move(player) + check_draw();
                     if(game_over) goto skip_game_over;
                 
                     can_insert = true;
@@ -418,21 +468,23 @@ public:
 		    skip_game_over:
             SetDrawTarget(nullptr);
 		    Clear(olc::BLANK);
-		
+            
 		    if(!game_over){ // Póki nikt nie wygrał to bierzemy kolumne i wstawiamy token jak się zgadza
-                if (player == 2 && !animating && false) {
+                
+                if (player == 2 && !animating && game_w_computer) {
                     can_insert = false;
                     animating = true;
-                    minmax(board, POZIOM_TRUDNOSCI, -9999, 9999, true);
+                    minmax(board, POZIOM_TRUDNOSCI, 0 - INT_MAX, INT_MAX, true);
                     p_x = comp_move;
                     check_token(p_x);
                     goto skip_input;
                 }
-                if(can_insert) p_x = get_user_input(p_y,player);
+                if(can_insert) p_x = get_user_input();
             
             skip_input:
                 char player_string[8];
                 sprintf(player_string,"Gracz %i",player);
+                
                 DrawString(W/2 - 220,H/2 - 320, string(player_string), player == 1 ? olc::RED : olc::YELLOW,7);
             
                 if(p_x != -1 && can_insert){ // Insert the token and change Player because he choosed the column
@@ -460,6 +512,7 @@ public:
                         if(GetMouse(0).bHeld){
                             text_col = olc::DARK_RED;
                             Reset();
+                            Clear(olc::BLACK);
                         }
                     }
                 }
@@ -477,9 +530,6 @@ int main()
 	Game game;
 	if (game.Construct(W, H, SCALE, SCALE))
 		game.Start();
-
-    delete game.title_data;
-    delete game.title;
 	return 0;
 }
 
