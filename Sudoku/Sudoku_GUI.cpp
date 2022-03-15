@@ -27,6 +27,7 @@ enum WINDOWS {
 int board[6][7] { 0 };
 int current_window = TITLE_SCREEN;
 int comp_move = -1;
+
 // https://stackoverflow.com/questions/740308/how-do-i-modify-this-easing-function-to-bounce-less#740350
 // Jak się chce zmienić bounce 
 float EaseBounceOut(float t, float d){
@@ -128,13 +129,13 @@ bool win_move(const int p) {
 
 // -------------------------------------- AI sprawy --------------------------------------
 
-int heurFunction(unsigned int g, unsigned int b, unsigned int z) {
+int heurFunction( int g,  int b,  int z) {
 	int score = 0;
-	if (g == 4) { score += 500001; } // preference to go for winning move vs. block
+	if (g == 4) { score += 500001; } // wygrana
 	else if (g == 3 && z == 1) { score += 5000; }
 	else if (g == 2 && z == 2) { score += 500; }
-	else if (b == 2 && z == 2) { score -= 501; }  // preference to block
-	else if (b == 3 && z == 1) { score -= 5001; } // preference to block
+	else if (b == 2 && z == 2) { score -= 501; } // block
+	else if (b == 3 && z == 1) { score -= 5001; } // block
 	else if (b == 4) { score -= 500000; }
 	return score;
 }
@@ -154,13 +155,13 @@ void remove_token(int x) {
     }
 }
 
-int scoreSet(int v[], unsigned int p) {
+int scoreSet(int v[], int p) {
 	
-	unsigned int good = 0;    // points in favor of p
-	unsigned int bad = 0;    // points against p
-	unsigned int empty = 0; // neutral spots
+	int good = 0;   
+	int bad = 0;  
+	int empty = 0; 
 	
-	for (int i = 0; i < 4; i++) { // just enumerate how many of each
+	for (int i = 0; i < 4; i++) { 
 		good  += (v[i] == p) ? 1 : 0;
 		bad   += (v[i] == 1 || v[i] == 2) ? 1 : 0;
 		empty += (v[i] == 0) ? 1 : 0;
@@ -177,23 +178,23 @@ int tabScore(int b[6][7], const int p) {
 	int cs[6] = {0};
 	int set[4] = {0};
 	
-	for (unsigned int r = 0; r < 6; r++) {
-		for (unsigned int c = 0; c < 7; c++) {
-			rs[c] = b[r][c]; // this is a distinct row alone
+	for ( int r = 0; r < 6; r++) {
+		for ( int c = 0; c < 7; c++) {
+			rs[c] = b[r][c];
 		}
-		for (unsigned int c = 0; c < 7 - 3; c++) {
+		for ( int c = 0; c < 7 - 3; c++) {
 			for (int i = 0; i < 4; i++) {
-				set[i] = rs[c + i]; // for each possible "set" of 4 spots from that row
+				set[i] = rs[c + i];
 			}
-			score += scoreSet(set, p); // find score
+			score += scoreSet(set, p);
 		}
 	}
-	// vertical
-	for (unsigned int c = 0; c < 7; c++) {
-		for (unsigned int r = 0; r < 6; r++) {
+	
+	for ( int c = 0; c < 7; c++) {
+		for ( int r = 0; r < 6; r++) {
 			cs[r] = b[r][c];
 		}
-		for (unsigned int r = 0; r < 6 - 3; r++) {
+		for ( int r = 0; r < 6 - 3; r++) {
 			for (int i = 0; i < 4; i++) {
 				set[i] = cs[r + i];
 			}
@@ -201,22 +202,22 @@ int tabScore(int b[6][7], const int p) {
 		}
 	}
 	// diagonals
-	for (unsigned int r = 0; r < 6 - 3; r++) {
-		for (unsigned int c = 0; c < 7; c++) {
+	for ( int r = 0; r < 6 - 3; r++) {
+		for ( int c = 0; c < 7; c++) {
 			rs[c] = b[r][c];
 		}
-		for (unsigned int c = 0; c < 7 - 3; c++) {
+		for ( int c = 0; c < 7 - 3; c++) {
 			for (int i = 0; i < 4; i++) {
 				set[i] = b[r + i][c + i];
 			}
 			score += scoreSet(set, p);
 		}
 	}
-	for (unsigned int r = 0; r < 6 - 3; r++) {
-		for (unsigned int c = 0; c < 7; c++) {
+	for ( int r = 0; r < 6 - 3; r++) {
+		for ( int c = 0; c < 7; c++) {
 			rs[c] = b[r][c];
 		}
-		for (unsigned int c = 0; c < 7 - 3; c++) {
+		for ( int c = 0; c < 7 - 3; c++) {
 			for (int i = 0; i < 4; i++) {
 				set[i] = b[r + 3 - i][c + i];
 			}
@@ -228,34 +229,34 @@ int tabScore(int b[6][7], const int p) {
 
 int minmax(int b[6][7], int depth , int alpha , int beta , bool computer){
     if (depth == 0 || check_draw()) {
-		// get current score to return
+
 		return tabScore(b, 2);
 	}
 	
-	if (computer) { // if AI player
+	if (computer) {
 		int maxVal = INT_MIN;
-		if (win_move(1))   // if player about to win
-			return maxVal; // force it to say it's worst possible score, so it knows to avoid move
+		if (win_move(1))  
+			return maxVal;
 
-		for (int i = 0; i < 7; i++) { // for each possible move
-			if (b[0][i] == 0) { // but only if that column is non-full
+		for (int i = 0; i < 7; i++) {
+			if (b[0][i] == 0) { 
                 insert_token(i,2);
-				int score = minmax(b, depth - 1, alpha, beta, false); // find move based on that new board state
+				int score = minmax(b, depth - 1, alpha, beta, false); 
 				remove_token(i);
-				if (score > maxVal) { // if better score, replace it, and consider that best move (for now)
+				if (score > maxVal) {
 					maxVal = score;
 					if(depth == POZIOM_TRUDNOSCI) comp_move = i;
 				}
 				alpha = MAX(alpha, maxVal);
-				if (alpha >= beta) break;// for pruning
+				if (alpha >= beta) break;
 			}
 		}
-		return maxVal; // return best possible move
+		return maxVal;
 	}
 	else {
-		int minVal = INT_MAX; // since PLAYER is minimized, we want moves that diminish this score
+		int minVal = INT_MAX;
 		if (win_move(2)) {
-			return minVal; // if about to win, report that move as best
+			return minVal;
 		}
 		for (int i = 0; i < 7; i++) {
 			if (b[0][i] == 0) {
