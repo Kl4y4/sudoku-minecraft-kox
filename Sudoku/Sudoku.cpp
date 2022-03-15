@@ -4,7 +4,6 @@
 
 using namespace std;
 
-// !!!EEEE WAŻNE, trzeba sprawdzić czy gracz dał number a nie litere bo się wtedy psuje i crashuje
 
 // =^w^=
 int board[6][7] { 0 };
