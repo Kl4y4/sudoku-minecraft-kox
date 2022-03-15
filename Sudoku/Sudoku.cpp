@@ -5,15 +5,24 @@
 #include <ctype.h>
 #include <string>
 #include <windows.h>
+#include <limits>
+#include <stdlib.h>
 
 using namespace std;
 
+
+#define POZIOM_TRUDNOSCI 8
+
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 // =^w^=
 int board[6][7]{ 0 };
+int comp_move = -1;
 
 void clear() {
     COORD topLeft = { 0, 0 };
-    HANDLE console = GetStdHandle((DWORD)- 11);
+    HANDLE console = GetStdHandle((DWORD)-11);
     CONSOLE_SCREEN_BUFFER_INFO screen;
     DWORD written;
 
@@ -30,6 +39,7 @@ void clear() {
 
 void draw_board() {
     clear();
+    cout << "   1   2   3   4   5   6   7\n";
     for (int i = 0; i < 6; i++, cout << " |\n") {
         for (int j = 0; j < 7; j++) {
             cout << " | ";
@@ -81,21 +91,21 @@ bool win_move(int x, int y) {
 
 int get_user_input(int& xi, int player) {
 
-    puts("WYKONAJ RUCH\n");
+    puts("\nWykonaj ruch\n");
     string x = "";
     cin >> x;
     cout << x << "\n";
-    
+
     try {
         xi = stoi(x, nullptr);
     }
     catch (exception e) {
-        cout << "Not a number brrrr";
+        cout << "Niepoprawny input";
         get_user_input(xi, player);
     }
 
     if (xi < 1 || xi > 7) {
-        cout << "POZA POLEM<!!!!";
+        cout << "\nPoza polem\n";
         get_user_input(xi, player);
     }
 
@@ -110,7 +120,7 @@ int get_user_input(int& xi, int player) {
     }
 
     if (ind == 9) {
-        cout << "WYBRANANA KOLUMNA PEŁŁNY";
+        cout << "Wybrana kolumna jest pelna";
         get_user_input(xi, player);
     }
 
@@ -120,23 +130,25 @@ int get_user_input(int& xi, int player) {
 
 }
 
-bool check_for_draw() {
-    for (int i = 0; i < 7; i++) if (board[0][i] == 0) return false;
+bool check_draw() {
+    for (int i = 0; i < 7; i++)
+        if (board[0][i] == 0) return false;
     return true;
 }
 
-void round() {
+void round_two_player() {
 
     int player = 1;
     int p_x = 0, p_y = 0;
 
+    draw_board();
     printf("Gracz %i: ", player);
     p_y = get_user_input(p_x, player);
 
     while (!win_move(p_x, p_y)) {
 
-        if (check_for_draw()) {
-            cout << "REMISIS!!!!";
+        if (check_draw()) {
+            cout << "Remis!";
             return;
         }
 
@@ -146,12 +158,15 @@ void round() {
         if (player == 1) player = 2;
         else            player = 1;
 
+        //minmax(board, 8, INT_MIN, INT_MAX, true);
+
         printf("Gracz %i: ", player);
         p_y = get_user_input(p_x, player);
+        
     }
 
     draw_board();
-    printf("Gracz %i wygrał!!!!!!!!", player);
+    printf("Gracz %i wygral!", player);
 
 }
 
@@ -181,6 +196,23 @@ void clear_board() {
 
 }
 
+bool if_reset() {
+
+    string reset = "";
+    cout << "\nCzy chcesz zagrac jeszcze raz???? [y/n]\n";
+    cin >> reset;
+
+    if (reset == "y" || reset == "Y") {
+        clear_board();
+        clear();
+        return true;
+    }
+    else {
+        cout << "Dziękujemy za gre :))";
+        return false;
+    }
+}
+
 int main() {
 
 
@@ -189,30 +221,19 @@ int main() {
 
     welcome_screen();
 
-    int enemy;
-    cout << "1 - Play withh othe rplatya\n2 - Plray wtih AII";
+    string enemy;
+    cout << "\nWitamy w Czworkach!\n";
     cin >> enemy;
 
-    //if 1 gamer if 2 konkluter :))
-
-    draw_board();
 
     while (ifContinue) {
 
-        round();
+        round_two_player();
 
-        cout << "Czy chcesz zagrać jeszcze raz???? [y/n]";
-        cin >> reset;
-
-        if (reset == "y" || reset == "Y") {
-            ifContinue = 1;
-            clear_board();
-        }
-        else {
-            cout << "Dziękujemy za grem :))";
-            ifContinue = 0;
-        }
+        ifContinue = if_reset();
 
     }
+
+    draw_board();
 
 }
